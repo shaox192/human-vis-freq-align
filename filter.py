@@ -1,45 +1,13 @@
-import matplotlib.pyplot as plt
-
-# from skimage import data, filters
-
-# image = data.camera()
-
-# cutoff frequencies as a fraction of the maximum frequency
-cutoffs = [0.02, 0.08, 0.16]
-
-
-# def DOB_filter():
-#     """
-#     Difference of Butterworth
-#     """
-
-#     lower_pass = filters.butterworth(image, cutoff_frequency_ratio=0.02, order=3.0, high_pass=False)
-#     upper_pass = filters.butterworth(image, cutoff_frequency_ratio=0.1, order=3.0, high_pass=False)
-
-#     dob = upper_pass - lower_pass
-
-#     fig, axes = plt.subplots(1, 3, figsize=(12, 4))
-
-#     axes[0].imshow(lower_pass, cmap='gray')
-#     axes[0].set_title('lowpass')
-#     axes[1].imshow(upper_pass, cmap='gray')
-#     axes[1].set_title('highpass')
-#     axes[2].imshow(dob, cmap='gray')
-#     axes[2].set_title('difference of Butterworth')
-
-#     plt.show()
-
-
 import numpy as np
-import matplotlib.pyplot as plt
+
 
 def butterworth_filter(shape, cutoff, order, high_pass=False):
     # https://ocw.mit.edu/courses/res-6-007-signals-and-systems-spring-2011/12cab215afbbe6694402d8d6458ce76f_MITRES_6_007S11_lec24.pdf
     h, w = shape
     # grid of (u, v) coordinates
 
-    u = np.arange(-w//2, w//2)
-    v = np.arange(-h//2, h//2)
+    u = np.arange(-(w//2), -(w//2) + shape[1])    
+    v = np.arange(-(h//2), -(h//2) + shape[1])    
     U, V = np.meshgrid(u, v)
 
     D = np.sqrt(U**2 + V**2)  # Distance from the center
@@ -52,17 +20,17 @@ def butterworth_filter(shape, cutoff, order, high_pass=False):
     return H
 
 
-def gaussian_filter(shape, cutoff, high_pass=False):
+def gaussian_filter(shape, sigma, high_pass=False):
     h, w = shape
-    u = np.arange(-w//2, w//2)
-    v = np.arange(-h//2, h//2)
+    u = np.arange(-(w//2), -(w//2) + shape[1])    
+    v = np.arange(-(h//2), -(h//2) + shape[1])   
     U, V = np.meshgrid(u, v)
 
     D = np.sqrt(U**2 + V**2)
     if high_pass:
-        H = 1 - np.exp(-D**2 / (2 * cutoff**2))
+        H = 1 - np.exp(-D**2 / (2 * sigma**2))
     else:
-        H = np.exp(-D**2 / (2 * cutoff**2))
+        H = np.exp(-D**2 / (2 * sigma**2))
     return H
 
 
@@ -99,4 +67,5 @@ def filter_image_infreq(image, filter):
     img_back = np.fft.ifft2(F)
     img_back = np.abs(img_back)
     return img_back, filtered_spectrum
+
 

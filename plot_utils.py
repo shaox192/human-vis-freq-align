@@ -10,7 +10,7 @@ def plot_freq_amplitude(im):
 
     radius = np.sqrt((x - center[1])**2 + (y - center[0])**2).astype(int)
     radial_mean = np.bincount(radius.ravel(), weights=im.ravel()) / np.bincount(radius.ravel())
-    print(radial_mean.shape)
+
     radial_mean = radial_mean[:min(im.shape) // 2]
     plt.plot(radial_mean)
     plt.xlabel('Spatial Frequency')
