@@ -4,10 +4,6 @@ import torch.nn as nn
 
 import numpy as np
 
-import filter
-import plot_utils
-
-
 
 class Kernel(nn.Module):
     def __init__(self, freq_filter, size, num_channel):
