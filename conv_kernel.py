@@ -13,26 +13,51 @@ class Kernel(nn.Module):
         """
         super(Kernel, self).__init__()
 
-        self.spatial_filter, self.conv = self._init_filter(freq_filter, size, num_channel)
+        self.spatial_filter = self._init_filter(freq_filter, size, num_channel)
     
     def _init_filter(self, freq_filter, size, num_channel):
-        half_size = size // 2
-        spatial_filter = np.abs(np.fft.ifftshift(np.fft.ifft2(freq_filter)))
-        spatial_filter /= spatial_filter.sum()
-        spatial_filter = torch.tensor(spatial_filter)
+        # half_size = size // 2
+        # spatial_filter = np.abs(np.fft.ifftshift(np.fft.ifft2(freq_filter)))
+        # #spatial_filter /= spatial_filter.sum()
+        # spatial_filter = torch.tensor(spatial_filter)
+        # spatial_filter = torch.flip(spatial_filter, dims=[0, 1])
+        # print(spatial_filter)
+        # conv = nn.Conv2d(num_channel, num_channel, size, padding='same', padding_mode='circular', bias=False)
+        # conv.weight.data *= 0
+        # for i in range(num_channel):
+        #     conv.weight.data[i, i] = spatial_filter
+        # conv.weight.requires_grad = False
+        spatial_filter = np.fft.ifft2(freq_filter)
+        spatial_filter = np.fft.ifftshift(spatial_filter)
+        spatial_filter_real = np.real(spatial_filter)
+        spatial_filter_imag = np.imag(spatial_filter)
 
-        conv = nn.Conv2d(num_channel, num_channel, size, padding=half_size, padding_mode='circular', bias=False)
+        spatial_filter_real = torch.tensor(np.flip(spatial_filter_real).copy(), dtype=torch.float32)
+        spatial_filter_imag = torch.tensor(np.flip(spatial_filter_imag).copy(), dtype=torch.float32)
 
-        conv.weight.data *= 0
-        for i in range(num_channel):
-            conv.weight.data[i, i] = spatial_filter
-        conv.weight.requires_grad = False
+        self.conv_real = nn.Conv2d(num_channel, num_channel, size, padding='same', padding_mode='reflect',
+                                   bias=False)
+        self.conv_imag = nn.Conv2d(num_channel, num_channel, size, padding='same', padding_mode='reflect',
+                                   bias=False)
+        with torch.no_grad():
+            self.conv_real.weight.zero_()
+            self.conv_imag.weight.zero_()
+            for i in range(num_channel):
+                self.conv_real.weight[i, i] = spatial_filter_real
+                self.conv_imag.weight[i, i] = spatial_filter_imag
+            self.conv_real.weight.requires_grad = False
+            self.conv_imag.weight.requires_grad = False
 
-        return spatial_filter, conv
+        return spatial_filter_real
 
 
     def forward(self, x):
-        return self.conv(x)
+        real_part = self.conv_real(x)
+        imag_part = self.conv_imag(x)
+
+        output = torch.sqrt(real_part ** 2 + imag_part ** 2)
+        phase = torch.atan2(imag_part, real_part)
+        return output
 
 
 def conv_kernel(freq_filter, size, num_channel):
