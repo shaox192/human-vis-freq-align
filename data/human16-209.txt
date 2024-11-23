@@ -1,54 +1,3 @@
-n03041632: cleaver
-n03085013: computer keyboard
-n04505470: typewriter keyboard
-n02504013: Indian elephant
-n02504458: African elephant
-n02835271: bicycle-built-for-two
-n03792782: mountain bike
-n02690373: airliner
-n03954731: plane
-n02708093: analog clock
-n03196217: digital clock
-n04548280: wall clock
-n03259280: Dutch oven
-n04111531: rotisserie
-n02791124: barber chair
-n03376595: folding chair
-n04099969: rocking chair
-n04429376: throne
-n02132136: brown bear
-n02133161: American black bear
-n02134084: ice bear
-n02134418: sloth bear
-n02951358: canoe
-n03344393: fireboat
-n03662601: lifeboat
-n04273569: speedboat
-n04612504: yawl
-n02123045: tabby
-n02123159: tiger cat
-n02123394: Persian cat
-n02123597: Siamese cat
-n02124075: Egyptian cat
-n02125311: cougar
-n02823428: beer bottle
-n03937543: pill bottle
-n03983396: pop bottle
-n04557648: water bottle
-n04560804: water jug
-n04579145: whiskey jug
-n04591713: wine bottle
-n03345487: fire engine
-n03417042: garbage truck
-n03770679: minivan
-n03796401: moving van
-n03930630: pickup
-n03977966: police van
-n04461696: tow truck
-n04467665: trailer truck
-n02814533: beach wagon
-n03100240: convertible
-n04285008: sports car
 n01514859: hen
 n01530575: brambling
 n01531178: goldfinch
@@ -207,3 +156,54 @@ n02113624: toy poodle
 n02113712: miniature poodle
 n02113799: standard poodle
 n02113978: Mexican hairless
+n02123045: tabby
+n02123159: tiger cat
+n02123394: Persian cat
+n02123597: Siamese cat
+n02124075: Egyptian cat
+n02125311: cougar
+n02132136: brown bear
+n02133161: American black bear
+n02134084: ice bear
+n02134418: sloth bear
+n02504013: Indian elephant
+n02504458: African elephant
+n02690373: airliner
+n02708093: analog clock
+n02791124: barber chair
+n02814533: beach wagon
+n02823428: beer bottle
+n02835271: bicycle-built-for-two
+n02951358: canoe
+n03041632: cleaver
+n03085013: computer keyboard
+n03100240: convertible
+n03196217: digital clock
+n03259280: Dutch oven
+n03344393: fireboat
+n03345487: fire engine
+n03376595: folding chair
+n03417042: garbage truck
+n03662601: lifeboat
+n03770679: minivan
+n03792782: mountain bike
+n03796401: moving van
+n03930630: pickup
+n03937543: pill bottle
+n03954731: plane
+n03977966: police van
+n03983396: pop bottle
+n04099969: rocking chair
+n04111531: rotisserie
+n04273569: speedboat
+n04285008: sports car
+n04429376: throne
+n04461696: tow truck
+n04467665: trailer truck
+n04505470: typewriter keyboard
+n04548280: wall clock
+n04557648: water bottle
+n04560804: water jug
+n04579145: whiskey jug
+n04591713: wine bottle
+n04612504: yawl

@@ -157,7 +157,10 @@ def main():
             else:
                 cat2keep.append((c, imgnet_1k[c][0]))
     print(f"Number of categories (belonged to the 16 cats) to keep {len(cat2keep)}")
-
+    
+    # sort by category sysnet id
+    cat2keep = sorted(cat2keep, key=lambda x: x[0])
+    
     save_f = save_f.format(len(cat2keep))
     with open(save_f, 'w') as f:
         for c, cat_name in cat2keep:
