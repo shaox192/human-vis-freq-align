@@ -1,5 +1,6 @@
 
-
+import torch.distributed as dist
+import os
 import pickle as pkl
 import cv2
 
@@ -62,3 +63,36 @@ def show_input_args(args):
     for arg in vars(args):
         print(f"{arg}: {getattr(args, arg)}")
     print("--------------------------\n")
+
+
+
+################## Training Utils ##################
+
+def is_dist_avail_and_initialized():
+    if not dist.is_available():
+        return False
+    if not dist.is_initialized():
+        return False
+    return True
+
+def get_rank():
+    if not is_dist_avail_and_initialized():
+        return 0
+    return dist.get_rank()
+
+def is_main_process():
+    return get_rank() == 0
+
+def print_safe(print_str, **kwargs):
+    if "flush" not in kwargs:
+        kwargs["flush"] = True
+    if is_main_process():
+        print(print_str, **kwargs)
+
+def make_directory(pth):
+    if is_main_process():
+        if not os.path.exists(pth):
+            print(f"Making output dir at {pth}")
+            os.makedirs(pth, exist_ok=True)
+        else:
+            print(f"Path {pth} exists.")
