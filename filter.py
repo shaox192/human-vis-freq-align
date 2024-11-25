@@ -1,4 +1,5 @@
 import numpy as np
+import utils
 
 
 def butterworth_filter(shape, cutoff, order, high_pass=False):
@@ -68,4 +69,12 @@ def filter_image_infreq(image, filter):
     img_back = np.abs(img_back)
     return img_back, filtered_spectrum
 
+
+def human_filter(im_shape, x_freqs):
+    A, mu, sigma = utils.HUMAN_AVG_GAUSS
+    gauss_fit = utils.fit_gaussian(x_freqs, A, mu, sigma, convert_data=True)
+    gauss_fit = gauss_fit / gauss_fit.max()  # normalize
+
+    fil_recon = utils.radialmean2filter(gauss_fit, im_shape)
+    return gauss_fit, fil_recon
 
