@@ -1,5 +1,8 @@
 import numpy as np
-import utils
+# import utils
+import numpy as np
+from scipy.interpolate import interp1d
+from scipy.stats import entropy
 
 
 def butterworth_filter(shape, cutoff, order, high_pass=False):
@@ -69,12 +72,86 @@ def filter_image_infreq(image, filter):
     img_back = np.abs(img_back)
     return img_back, filtered_spectrum
 
+################## HUMAN FREQUENCY CHANNEL BP FILTER ##################
+
+HUMAN_AVG_GAUSS = [4.0, 4.5, 0.424619]
+
+def fit_gaussian(data, A, mu, sigma, convert_data=False):
+    """
+    Fits a gaussian to the data
+    """
+    def gauss(x):
+        return A * np.exp(-(x-mu)**2/(2.*sigma**2))
+    
+    data2fit = np.array(data)
+    if convert_data:
+        data2fit = np.log2(data2fit / 1.75)
+
+    gauss_fit = gauss(data2fit)
+    return gauss_fit
+
+def channel_props(A, mu, sigma):
+    """
+    Calculates channel properties, given fit gaussian parameters
+	"""
+    bw = 2 * np.sqrt(np.log(4)) * sigma
+    cf = 1.75 * 2 ** mu
+    pns = 2**(A-4)
+    
+    return bw, cf, pns
+
+def filter2radialmean(filter):
+    h, w = filter.shape
+    y, x = np.indices((h, w))
+    center = (h//2, w//2)
+
+    radius = np.sqrt((x - center[1])**2 + (y - center[0])**2).astype(int)
+    radial_mean = np.bincount(radius.ravel(), weights=filter.ravel()) / np.bincount(radius.ravel())
+
+    radial_mean = radial_mean[:min(filter.shape) // 2]
+    return radial_mean
+
+
+def radialmean2filter(radial_mean, im_shape):
+    """
+    Converts radial mean to an filter
+    """
+    h, w = im_shape
+    y, x = np.indices(im_shape)
+    center = (h//2, w//2)
+    radius = np.sqrt((x - center[1])**2 + (y - center[0])**2).astype(int)
+
+    # interpolate for smooth radial mean
+    r = np.arange(len(radial_mean))
+    interp_func = interp1d(r, radial_mean, kind='quadratic', 
+                           bounds_error=False, fill_value="extrapolate")
+    smooth_radial_mean = interp_func(radius)
+    return smooth_radial_mean
+
+def kl_divergence(p, q):
+    """
+    Calculates KL divergence between two distributions
+    """
+    p = np.asarray(p)
+    q = np.asarray(q)
+    p /= p.sum()
+    q /= q.sum()
+    
+    return entropy(p, q)
+
+def mse(p, q):
+    """
+    Calculates mean squared error between two distributions
+    """
+    p = np.array(p)
+    q = np.array(q)
+    return np.mean((p - q)**2)
+
 
 def human_filter(im_shape, x_freqs):
-    A, mu, sigma = utils.HUMAN_AVG_GAUSS
-    gauss_fit = utils.fit_gaussian(x_freqs, A, mu, sigma, convert_data=True)
+    A, mu, sigma = HUMAN_AVG_GAUSS
+    gauss_fit = fit_gaussian(x_freqs, A, mu, sigma, convert_data=True)
     gauss_fit = gauss_fit / gauss_fit.max()  # normalize
 
-    fil_recon = utils.radialmean2filter(gauss_fit, im_shape)
+    fil_recon = radialmean2filter(gauss_fit, im_shape)
     return gauss_fit, fil_recon
-
