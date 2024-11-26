@@ -20,12 +20,10 @@ import torch.nn.parallel
 import torch.optim
 import torch.utils.data
 import torch.utils.data.distributed
-import torchvision.models as models
 from torch.optim.lr_scheduler import StepLR, CosineAnnealingLR
 from torch.utils.data import Subset
 
-# from model import ManCoTrainNet, ManLoss, correlation
-from models import BandPassNet
+import models
 
 # from utils import print_safe, Summary, AverageMeter, ProgressMeter, accuracy, pickle_dump, make_directory, get_rank
 import utils
@@ -57,6 +55,8 @@ parser.add_argument('--pretrained', dest='pretrained', action='store_true',
                     help='use pre-trained model')
 parser.add_argument("--append-layer", default="None", type=str, 
                     help="append which layer: [default(None), bandpass, blur] to the beginning of the model")
+parser.add_argument("--kernel-size", default=31, type=int, 
+                    help="kernel size for the bandpass/blur layer")
 
 ############ training parameters
 parser.add_argument('--train_workers', default=8, type=int, metavar='N',
@@ -207,34 +207,29 @@ def main_worker(gpu, ngpus_per_node, args):
     for i, (images, target) in enumerate(train_loader):
         print(i, images.shape, target)
 
-    exit()
     utils.print_safe(f"Data loaded: train: {len(train_loader)}, val: {len(val_loader)}", flush=True)
 
     ## -- create model
-    # man_stats = data_loader.load_man_stats_dict(args.manifold_stats, train_loader.dataset.imagenetclass2idx,
-    #                                             args.orig_manifold_stats)
+    if args.category_16:
+        num_classes = 16
+    elif args.category_1k:
+        num_classes = 1000
+    else:
+        num_classes = 209
+    classifier = models.get_classifier(args.arch, num_classes=num_classes)
 
-    # if args.pretrained:
-    #     print_safe("=> using pre-trained model '{}'".format(args.arch))
-    #     classifier = models.__dict__[args.arch](weights=get_model_weights(args.arch))
-    # else:
-    #     print_safe("=> creating model '{}'".format(args.arch))
-    #     classifier = models.__dict__[args.arch]()
-
-    # if args.roi == "None":
-    #     args.alphas = (1.0, 0.0, 0.0, 0.0)
-    #     print_safe("!!!!!!!! alpha set to 0.0 when ROI is [None]")
-    #     n_vox = 497
-    # else:
-    #     n_vox = man_stats["basis"].shape[0]
-
-    # print_safe(f"\t--> number of voxels: {n_vox}")
-
-    model = ManCoTrainNet(classifier, n_vox, man_stats, args.decorr_ON)
-    print_safe(model)
+    if args.append_layer == "bandpass":
+        model = models.BandPassNet(classifier, kernel_size=args.kernel_size)
+    elif args.append_layer == "blur":
+        raise NotImplementedError
+        # model = models.BlurNet(classifier)
+    else:
+        model = classifier
+    utils.print_safe(model)
+    exit()
 
     if not torch.cuda.is_available():
-        print_safe('using CPU, this will be slow')
+        utils.print_safe('using CPU, this will be slow')
     elif args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
         # should always set the single device scope, otherwise,
