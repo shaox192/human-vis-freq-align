@@ -34,8 +34,8 @@ model_names = ["resnet18", ]
 parser = argparse.ArgumentParser(description='PyTorch imagenet Training')
 parser.add_argument('data', metavar='DIR', nargs='?', default='',
                     help='path to dataset (default: imagenet)')
-parser.add_argument('--save_dir', required=True, type=str, help='path to save the checkpoints')
-parser.add_argument('--img_folder_txt', default="./data/human16-209.txt",
+parser.add_argument('--save-dir', required=True, type=str, help='path to save the checkpoints')
+parser.add_argument('--img-folder-txt', default="./data/human16-209.txt",
                     type=str, help='path to a textfile of sub categories of imagenet to be used')
 
 parser.add_argument('--category-209', action='store_true', default=True,
@@ -186,10 +186,10 @@ def main_worker(gpu, ngpus_per_node, args):
       .replace(":", "-")
     )
     category_str = "209" if args.category_209 else "16" if args.category_16 else "1k"
-    save_f_name = f"{args.save_dir}/{args.arch}-layer-{args.append_layer}-category-{category_str}-{datetime_str}"
+    save_dir_name = f"{args.save_dir}/{args.arch}-layer-{args.append_layer}-category-{category_str}-{datetime_str}"
 
-    utils.print_safe(f"*** Saving to: {save_f_name}")
-    utils.make_directory(args.save_dir)
+    utils.print_safe(f"*** Saving to: {save_dir_name}")
+    utils.make_directory(save_dir_name)
     
     ## -- find device
     if torch.cuda.is_available():
@@ -204,8 +204,8 @@ def main_worker(gpu, ngpus_per_node, args):
     train_loader, val_loader, \
         train_sampler, val_sampler = data_loader.build_data_loader(args)
     
-    for i, (images, target) in enumerate(train_loader):
-        print(i, images.shape, target)
+    # for i, (images, target) in enumerate(train_loader):
+    #     print(i, images.shape, target)
 
     utils.print_safe(f"Data loaded: train: {len(train_loader)}, val: {len(val_loader)}", flush=True)
 
@@ -226,7 +226,6 @@ def main_worker(gpu, ngpus_per_node, args):
     else:
         model = classifier
     utils.print_safe(model)
-    exit()
 
     if not torch.cuda.is_available():
         utils.print_safe('using CPU, this will be slow')
@@ -242,7 +241,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 # DistributedDataParallel, we need to divide the batch size
                 # ourselves based on the total number of GPUs of the current node.
                 args.batch_size = int(args.batch_size / ngpus_per_node)
-                print_safe(f"distributing batch size: {args.batch_size}")
+                utils.print_safe(f"distributing batch size: {args.batch_size}")
                 # args.workers = int((args.workers + ngpus_per_node - 1) / ngpus_per_node)
                 model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
             else:
@@ -262,8 +261,7 @@ def main_worker(gpu, ngpus_per_node, args):
             model = torch.nn.DataParallel(model).cuda()
 
     ## -- loss, optimizer, scheduler
-    # define loss function (criterion), optimizer, and learning rate scheduler
-    criterion = ManLoss(man_stats, args.decorr_ON).to(device)
+    criterion = models.utils.get_loss_fn().to(device)
 
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
@@ -279,7 +277,7 @@ def main_worker(gpu, ngpus_per_node, args):
     # optionally resume from a checkpoint
     if args.resume:
         if os.path.isfile(args.resume):
-            print_safe("=> loading checkpoint '{}'".format(args.resume))
+            utils.print_safe("=> loading checkpoint '{}'".format(args.resume))
             if args.gpu is None:
                 checkpoint = torch.load(args.resume)
             elif torch.cuda.is_available():
@@ -293,74 +291,56 @@ def main_worker(gpu, ngpus_per_node, args):
             model.module.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
             scheduler.load_state_dict(checkpoint['scheduler'])
-            print_safe("=> loaded checkpoint '{}' (epoch {})"
+            utils.print_safe("=> loaded checkpoint '{}' (epoch {})"
                   .format(args.resume, checkpoint['epoch']))
         else:
-            print_safe("=> no checkpoint found at '{}'".format(args.resume))
+            utils.print_safe("=> no checkpoint found at '{}'".format(args.resume))
 
 
     if args.evaluate:
-        validate(val_loader, model, criterion, device, args, man_stats["man_info_retriev_idx"])
+        validate(val_loader, model, criterion, device, args)
         return
 
     train_loss_cls_epk = []
-    train_loss_reg_orig_rad_epk = []
-    train_loss_reg_orig_dim_epk = []
-    train_loss_reg_decorr_rad_epk = []
-    train_loss_reg_decorr_dim_epk = []
     train_acc1_epk = []
     train_acc5_epk = []
 
+    val_loss_cls_epk = []
     val_acc1_epk = []
     val_acc5_epk = []
-    val_loss_cls_epk = []
-    val_loss_reg_orig_rad_epk = []
-    val_loss_reg_orig_dim_epk = []
-    val_loss_reg_decorr_rad_epk = []
-    val_loss_reg_decorr_dim_epk = []
 
     for epoch in range(args.start_epoch, args.epochs):
-        print_safe(f"Epoch: {epoch}, lr: {scheduler.get_last_lr()}, {optimizer.param_groups[0]['lr']}")
+        utils.print_safe(f"Epoch: {epoch}, lr: {scheduler.get_last_lr()}, {optimizer.param_groups[0]['lr']}")
         if args.distributed:
             train_sampler.set_epoch(epoch)
 
         # train for one epoch
-        train_loss_classify, train_loss_reg_orig_rad, train_loss_reg_orig_dim, \
-        train_loss_reg_decorr_rad, train_loss_reg_decorr_dim, \
-        train_top1, train_top5 = train(train_loader, model, criterion, optimizer, \
-                                           epoch, device, args, man_stats["man_info_retriev_idx"])
+        train_loss_classify, train_top1, train_top5 = train(
+            train_loader, model, criterion, optimizer, epoch, device, args
+            )
 
         # evaluate on validation set
-        acc1, acc5, loss_classify, val_loss_reg_orig_rad, val_loss_reg_orig_dim, \
-            val_loss_reg_decorr_rad, val_loss_reg_decorr_dim = validate(
-            val_loader, model, criterion, device, args, man_stats["man_info_retriev_idx"]
-        )
+        val_loss_classify, acc1, acc5 = validate(
+            val_loader, model, criterion, device, args
+            )
 
         train_loss_cls_epk.append(train_loss_classify)
-        train_loss_reg_orig_rad_epk.append(train_loss_reg_orig_rad)
-        train_loss_reg_orig_dim_epk.append(train_loss_reg_orig_dim)
-
-        train_loss_reg_decorr_rad_epk.append(train_loss_reg_decorr_rad)
-        train_loss_reg_decorr_dim_epk.append(train_loss_reg_decorr_dim)
         train_acc1_epk.append(train_top1)
         train_acc5_epk.append(train_top5)
 
+        val_loss_cls_epk.append(val_loss_classify)
         val_acc1_epk.append(acc1)
         val_acc5_epk.append(acc5)
-        val_loss_cls_epk.append(loss_classify)
-        val_loss_reg_orig_rad_epk.append(val_loss_reg_orig_rad)
-        val_loss_reg_orig_dim_epk.append(val_loss_reg_orig_dim)
-
-        val_loss_reg_decorr_rad_epk.append(val_loss_reg_decorr_rad)
-        val_loss_reg_decorr_dim_epk.append(val_loss_reg_decorr_dim)
+        
 
         scheduler.step()
 
         if (
                 epoch % args.save_interval == 0 and
                 epoch != 0 and
-                args.multiprocessing_distributed and
-                args.rank % ngpus_per_node == 0
+                utils.is_main_process()
+                # args.multiprocessing_distributed and
+                # args.rank % ngpus_per_node == 0
         ):
             state = {
                 'epoch': epoch + 1,
@@ -369,88 +349,56 @@ def main_worker(gpu, ngpus_per_node, args):
                 'optimizer': optimizer.state_dict(),
                 'scheduler': scheduler.state_dict()
             }
-            torch.save(state, f"{save_dir_name}_epk_{epoch}.pth")
+            torch.save(state, f"{save_dir_name}/ckpt_epk{epoch}.pth")
 
-            pickle_dump({
+            utils.pickle_dump({
                 "train_loss_cls_epk": train_loss_cls_epk,
-                "train_loss_reg_orig_rad_epk": train_loss_reg_orig_rad_epk,
-                "train_loss_reg_orig_dim_epk": train_loss_reg_orig_dim_epk,
-                "train_loss_reg_decorr_rad_epk": train_loss_reg_decorr_rad_epk,
-                "train_loss_reg_decorr_dim_epk": train_loss_reg_decorr_dim_epk,
                 "train_acc1_epk": train_acc1_epk,
                 "train_acc5_epk": train_acc5_epk,
-
+                "val_loss_cls_epk": val_loss_cls_epk,
                 "val_acc1_epk": val_acc1_epk,
                 "val_acc5_epk": val_acc5_epk,
-                "val_loss_cls_epk": val_loss_cls_epk,
-                "val_loss_reg_orig_rad_epk": val_loss_reg_orig_rad_epk,
-                "val_loss_reg_orig_dim_epk": val_loss_reg_orig_dim_epk,
-                "val_loss_reg_decorr_rad_epk": val_loss_reg_decorr_rad_epk,
-                "val_loss_reg_decorr_dim_epk": val_loss_reg_decorr_dim_epk,
                 }, 
-                f"{save_dir_name}_stats.pkl")
+                f"{save_dir_name}/stats_epk{epoch}.pkl")
 
 
-def train(train_loader, model, criterion, optimizer, epoch, device, args, man_info_retriev_idx):
+def train(train_loader, model, criterion, optimizer, epoch, device, args):
     # switch to train mode
     model.train()
 
-    batch_time = AverageMeter('Time', ':6.3f')
-    data_time = AverageMeter('Data', ':6.3f')
-    losses_classify = AverageMeter('Loss_classify', ':.4e', loss_alpha=args.alphas[0])
-    losses_reg_orig_rad = AverageMeter('Loss_reg_orig_rad', ':.4e', loss_alpha=args.alphas[1])
-    losses_reg_orig_dim = AverageMeter('Loss_reg_orig_dim', ':.4e', loss_alpha=args.alphas[2])
-    losses_reg_decorr_rad = AverageMeter('Loss_reg_decorr_rad', ':.4e', loss_alpha=args.alphas[3])
-    losses_reg_decorr_dim = AverageMeter('Loss_reg_decorr_dim', ':.4e', loss_alpha=args.alphas[4])
-    top1 = AverageMeter('Acc@1', ':6.2f')
-    top5 = AverageMeter('Acc@5', ':6.2f')
-    progress = ProgressMeter(
+    batch_time = utils.AverageMeter('Time', ':6.3f')
+    data_time = utils.AverageMeter('Data', ':6.3f')
+    losses_classify = utils.AverageMeter('Loss_classify', ':.4e')
+    top1 = utils.AverageMeter('Acc@1', ':6.2f')
+    top5 = utils.AverageMeter('Acc@5', ':6.2f')
+    progress = utils.ProgressMeter(
         len(train_loader),
         [batch_time, data_time, 
-         losses_classify, losses_reg_orig_rad, losses_reg_orig_dim, losses_reg_decorr_rad, losses_reg_decorr_dim,
+         losses_classify,
          top1, top5],
         prefix="Epoch: [{}]".format(epoch))
 
     end = time.time()
-    for i, (images, target, _) in enumerate(train_loader):
+    for i, (images, target) in enumerate(train_loader):
 
         # measure data loading time
         data_time.update(time.time() - end)
 
-        # obtain the corresponding index of the manifold data
-        index2select = [man_info_retriev_idx[t] for t in target]
-
         # move data to the same device as model
-        index2select = torch.tensor(index2select, dtype=int).to(device)
         images = images.to(device, non_blocking=True)
         target = target.to(device, non_blocking=True)
         
         # compute output
-        neural_out, classification_out, neural_man_orig_space, neural_man_decorr = model(images, index2select)
-
-        loss_classify, loss_orig_rad, loss_orig_dim, \
-        loss_decorr_rad, loss_decorr_dim = criterion(classification_out, target, neural_man_orig_space, neural_man_decorr, index2select)
-        
-        loss = args.alphas[0] * loss_classify + \
-               args.alphas[1] * loss_orig_rad + \
-               args.alphas[2] * loss_orig_dim + \
-               args.alphas[3] * loss_decorr_rad + \
-               args.alphas[4] * loss_decorr_dim
-
+        output = model(images)
 
         # measure accuracy
-        acc1, acc5 = accuracy(classification_out, target, topk=(1, 5))
-
-        # record progress
+        acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
         top1.update(acc1[0], images.size(0))
         top5.update(acc5[0], images.size(0))
 
-        losses_classify.update(loss_classify.item(), images.size(0))
-        losses_reg_orig_rad.update(loss_orig_rad.item(), images.size(0))
-        losses_reg_orig_dim.update(loss_orig_dim.item(), images.size(0))
-        losses_reg_decorr_rad.update(loss_decorr_rad.item(), images.size(0))
-        losses_reg_decorr_dim.update(loss_decorr_dim.item(), images.size(0))
-
+        # loss
+        loss = criterion(output, target) 
+        losses_classify.update(loss.item(), images.size(0))
         # compute gradient and do SGD step
         optimizer.zero_grad()
         loss.backward()
@@ -460,88 +408,59 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args, man_in
         batch_time.update(time.time() - end)
         end = time.time()
         
-        if i % args.print_freq == 0 and get_rank() == 0:
+        if i % args.print_freq == 0 and utils.is_main_process():
             progress.display(i + 1)
-            print_safe("")
+            utils.print_safe("")
 
-    return losses_classify.avg, losses_reg_orig_rad.avg, losses_reg_orig_dim.avg, \
-        losses_reg_decorr_rad.avg, losses_reg_decorr_dim.avg, top1.avg, top5.avg
+    return losses_classify.avg, top1.avg, top5.avg
 
 
-def validate(val_loader, model, criterion, device, args, man_info_retriev_idx):
+def validate(val_loader, model, criterion, device, args):
     # switch to evaluate mode
     model.eval()
 
     def run_validate(loader, base_progress=0):
         with torch.no_grad():
             end = time.time()
-            for i, (images, target, _) in enumerate(loader):
+            for i, (images, target) in enumerate(loader):
                 i = base_progress + i
 
-                # obtain the corresponding index of the manifold data
-                index2select = [man_info_retriev_idx[t] for t in target]
-
                 # move data to the same device as model
-                index2select = torch.tensor(index2select, dtype=int).to(device)
                 images = images.to(device, non_blocking=True)
                 target = target.to(device, non_blocking=True)
 
                 # compute output
-                neural_out, classification_out, neural_man_orig_space, neural_man_decorr = model(images, index2select)
-
-                loss_classify, loss_orig_rad, loss_orig_dim, loss_decorr_rad, loss_decorr_dim = criterion(classification_out, target, 
-                                                                                     neural_man_orig_space, neural_man_decorr, index2select)
-                
-                # loss_classify *= args.alphas[0]
-                # loss_orig_space *= args.alphas[1]
-                # loss_decorr_rad *= args.alphas[2]
-                # loss_decorr_dim *= args.alphas[3]
+                output = model(images)
                 
                 # measure accuracy and record loss
-                acc1, acc5 = accuracy(classification_out, target, topk=(1, 5))
-                losses_classify.update(loss_classify.item(), images.size(0))
-
-                losses_reg_orig_rad.update(loss_orig_rad.item(), images.size(0))
-                losses_reg_orig_dim.update(loss_orig_dim.item(), images.size(0))
-
-                losses_reg_decorr_rad.update(loss_decorr_rad.item(), images.size(0))
-                losses_reg_decorr_dim.update(loss_decorr_dim.item(), images.size(0))
-
+                acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
                 top1.update(acc1[0], images.size(0))
                 top5.update(acc5[0], images.size(0))
+
+                # loss
+                loss = criterion(output, target)
+                losses_classify.update(loss.item(), images.size(0))
 
                 # measure elapsed time
                 batch_time.update(time.time() - end)
                 end = time.time()
 
-    batch_time = AverageMeter('Time', ':6.3f', Summary.NONE)
-    losses_classify = AverageMeter('Loss_classify', Summary.NONE, loss_alpha=args.alphas[0])
+    batch_time = utils.AverageMeter('Time', ':6.3f', utils.Summary.NONE)
+    losses_classify = utils.AverageMeter('Loss_classify', utils.Summary.NONE)
 
-    losses_reg_orig_rad = AverageMeter('Loss_reg_orig_rad', ':.4e', loss_alpha=args.alphas[1])
-    losses_reg_orig_dim = AverageMeter('Loss_reg_orig_dim', ':.4e', loss_alpha=args.alphas[2])
+    top1 = utils.AverageMeter('Acc@1', ':6.2f', utils.Summary.AVERAGE)
+    top5 = utils.AverageMeter('Acc@5', ':6.2f', utils.Summary.AVERAGE)
 
-    losses_reg_decorr_rad = AverageMeter('Loss_reg_decorr_rad', ':.4e', loss_alpha=args.alphas[3])
-    losses_reg_decorr_dim = AverageMeter('Loss_reg_decorr_dim', ':.4e', loss_alpha=args.alphas[4])
-
-    top1 = AverageMeter('Acc@1', ':6.2f', Summary.AVERAGE)
-    top5 = AverageMeter('Acc@5', ':6.2f', Summary.AVERAGE)
-
-    progress = ProgressMeter(
+    progress = utils.ProgressMeter(
         len(val_loader) + (args.distributed and (len(val_loader.sampler) * args.world_size < len(val_loader.dataset))),
-        [batch_time, losses_classify, losses_reg_orig_rad, losses_reg_orig_dim, losses_reg_decorr_rad, losses_reg_decorr_dim, top1, top5],
-        prefix='Test: ')
+        [batch_time, losses_classify, top1, top5],
+        prefix='TEST: ')
 
     run_validate(val_loader)
     if args.distributed:
         top1.all_reduce()
         top5.all_reduce()
         losses_classify.all_reduce()
-
-        losses_reg_orig_rad.all_reduce()
-        losses_reg_orig_dim.all_reduce()
-
-        losses_reg_decorr_rad.all_reduce()
-        losses_reg_decorr_dim.all_reduce()
 
     if args.distributed and (len(val_loader.sampler) * args.world_size < len(val_loader.dataset)):
         aux_val_dataset = Subset(val_loader.dataset,
@@ -551,11 +470,10 @@ def validate(val_loader, model, criterion, device, args, man_info_retriev_idx):
             num_workers=args.test_workers, pin_memory=True)
         run_validate(aux_val_loader, len(val_loader))
 
-    if get_rank() == 0:
+    if utils.is_main_process():
         progress.display_summary()
 
-    return top1.avg, top5.avg, losses_classify.avg, \
-           losses_reg_orig_rad.avg, losses_reg_orig_dim.avg, losses_reg_decorr_rad.avg, losses_reg_decorr_dim.avg
+    return losses_classify.avg, top1.avg, top5.avg
 
 
 if __name__ == '__main__':
