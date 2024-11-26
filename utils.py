@@ -61,10 +61,10 @@ def pickle_load(fpth):
 
 
 def show_input_args(args):
-    print("\n***check params ---------")
+    print_safe("\n***check params ---------")
     for arg in vars(args):
-        print(f"{arg}: {getattr(args, arg)}")
-    print("--------------------------\n")
+        print_safe(f"{arg}: {getattr(args, arg)}")
+    print_safe("--------------------------\n")
 
 
 
