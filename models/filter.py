@@ -83,7 +83,7 @@ def fit_gaussian(data, A, mu, sigma, convert_data=False):
     
     data2fit = np.array(data)
     if convert_data:
-        data2fit = np.log2(data2fit / 1.75)
+        data2fit = np.log2((data2fit / 1.75) + 1e-6)
 
     gauss_fit = gauss(data2fit)
     return gauss_fit
