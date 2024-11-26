@@ -28,3 +28,7 @@ def get_classifier(arch, num_classes, pretrained=True):
         classifier = torchmodels.__dict__[arch](num_classes=num_classes)
     
     return classifier
+
+
+def get_loss_fn():
+    return nn.CrossEntropyLoss()
