@@ -61,16 +61,14 @@ def filter_image_infreq(image, filter):
     # Compute the 2D Fourier Transform of the input image
     F = np.fft.fft2(image)
     Fshift = np.fft.fftshift(F)
-
     # Apply the filter
-    Fshift = Fshift * filter
-    filtered_spectrum = np.log(np.abs(Fshift))
+    Fshift_fil = Fshift * filter
 
     # Compute the inverse 2D Fourier Transform
-    F = np.fft.ifftshift(Fshift)
-    img_back = np.fft.ifft2(F)
-    img_back = np.abs(img_back)
-    return img_back, filtered_spectrum
+    F_fil = np.fft.ifftshift(Fshift_fil)
+    img_back = np.fft.ifft2(F_fil)
+    # img_back = np.abs(img_back)
+    return img_back, Fshift, Fshift_fil # , filtered_spectrum
 
 ################## HUMAN FREQUENCY CHANNEL BP FILTER ##################
 
