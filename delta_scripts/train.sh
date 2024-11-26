@@ -6,7 +6,7 @@
 #SBATCH --partition=gpuA40x4-interactive
 #SBATCH --time=00:45:00
 #SBATCH --account=bbtb-delta-gpu
-#SBATCH --job-name=MANIFOLD
+#SBATCH --job-name=CVBandpass
 ### GPU options ###
 #SBATCH --gpus-per-node=4
 #SBATCH --gpus-per-task=4
@@ -23,37 +23,27 @@ which python3
 export SLURM_MPI_TYPE=pmi2
 
 PRT_DIR="/scratch/bbtb"
-SUB_ID="sub1"
-ROI=V1
-origImageNetLbs="${PRT_DIR}/zhenans2/BIAIfollowup/manifolds/BIAImanifolds/annot/imagenet_labels.txt"
-manStatsF="${PRT_DIR}/zhenans2/BIAIfollowup/manifolds/manifold_stats/mftma/mftma_${SUB_ID}_tunedNP_train_${ROI}.pkl"
-manStatsOrig="${PRT_DIR}/zhenans2/BIAIfollowup/manifolds/manifold_stats/mftma/mftma_orig_${SUB_ID}_tunedNP_train_${ROI}.pkl"
 
-# save_dir="${PRT_DIR}/zhenans2/BIAIfollowup/manifolds/ckpt/manifold_orig_dim_V1_0.1"
-save_dir="${PRT_DIR}/zhenans2/BIAIfollowup/manifolds/ckpt/manifold_orig_comb_V1"
+saveD="${PRT_DIR}/zhenans2/CV_bandpass_adv/training_outputs"
+imgFolderTXT="${PRT_DIR}/coco50.txt"
 
-srun python ${PRT_DIR}/zhenans2/BIAIfollowup/manifolds/BIAImanifolds/training/cotrain_man.py ${PRT_DIR}/imagenet \
-        --sub ${SUB_ID} \
-        --img_folder_txt ${PRT_DIR}/coco50.txt \
-        --save_dir ${save_dir} \
-        --manifold-stats ${manStatsF}  \
-        --orig-imagenet-lbs ${origImageNetLbs} \
-        --orig-manifold-stats ${manStatsOrig} \
-	--decorr-ON \
-        --roi $ROI \
-        --arch resnet18 \
-        --seed 415 \
+srun python ${PRT_DIR}/zhenans2/CV_bandpass_adv/human-vis-freq-align/train.py ${PRT_DIR}/imagenet \
+        --save-dir $saveD \
+        --img-folder-txt $imgFolderTXT \
+        --category-209 \
+        --arch "resnet18" \
         --pretrained \
+        --append-layer "bandpass" \
+        --kernel-size 31 \
+        --seed 415 \
         --batch-size 1024 \
-        --lr 0.1 \
-	--weight-decay 0.0001 \
-        --epochs 56 \
+        --lr 0.01 \
+        --weight-decay 0.0001 \
+        --epochs 40 \
         --save-interval 5 \
         --print-freq 1 \
-        --alphas 0.6 0.2 0.2 0.0 0.0\
         --multiprocessing-distributed \
         --dist-url 'tcp://127.0.0.1:2000' --dist-backend 'nccl' --world-size 1 --rank 0
         
-
 exit 
 
