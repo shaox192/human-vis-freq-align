@@ -221,6 +221,7 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.append_layer == "bandpass":
         model = models.BandPassNet(classifier, kernel_size=args.kernel_size)
     elif args.append_layer == "blur":
+        #TODO: Implement blur layer
         raise NotImplementedError
         # model = models.BlurNet(classifier)
     else:

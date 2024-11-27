@@ -13,6 +13,7 @@ class BlurNet(nn.Module):
         self.classifier = classifier
         in_channels = self.classifier.conv1.in_channels
 
+        #TODO: Implement blur layer
         self.sigma = sigma
         self.blur = None # nn.Conv2d(in_channels, in_channels, kernel_size, padding='same', padding_mode='reflect', bias=False)
         self._init_filter(kernel_size, in_channels, sigma)
