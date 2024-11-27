@@ -18,6 +18,7 @@ parser = argparse.ArgumentParser(description='attack')
 parser.add_argument('data', metavar='DIR', nargs='?', default='',
                     help='path to dataset (default: imagenet)')
 parser.add_argument('--img-folder-txt', type=str, help='path to a textfile of image folders used')
+parser.add_argument('--save-dir', default='.', type=str, help='path to save the checkpoints')
 
 ### model
 parser.add_argument('--model-pth', type=str, help='path to a neural predictor')
@@ -60,6 +61,10 @@ def main():
         EPSILON_LS = []
         utils.print_safe(f"Using L2 norm, Epsilon to be tested: \n{EPSILON_LS}", flush=True)
 
+    ## -- save dir
+    utils.print_safe(f"******* Saving to: {args.save_dir}")
+    utils.make_directory(args.save_dir)
+
     ## -- data
     _, val_loader, _, val_sampler = data_loader.build_data_loader(args)
     utils.print_safe(f"Data loaded: val: {len(val_loader)}", flush=True)
@@ -80,26 +85,33 @@ def main():
         # model = models.BlurNet(classifier)
     else:
         model = classifier
-    
+
+    checkpoint = torch.load(args.model_pth, map_location=device)
+    model.load_state_dict(checkpoint['state_dict'])
     model = models.AttackNet(model, args.append_layer)
     model = model.to(device).eval()
     utils.print_safe(model)
 
-    results = []
+    results = {"args": args, 
+               "eps": EPSILON_LS,
+               "clean_acc": [], 
+               "perturb_acc": []}
+    
     for i, epsilon in enumerate(EPSILON_LS):
-        print(f"\n-> Current Epsilon [{i}]/[{len(EPSILON_LS)}]: {epsilon:4f}")
+        print(f"\n-> Current Epsilon [{i}]/[{len(EPSILON_LS)}]: {epsilon:4f} ({epsilon * 255:.0f}/255)")
 
         original_acc_sum, perturb_accs, n = attack_alg.foolbox_attack(val_loader, model, device,
                                                                       epsilon, args.lp, args.attack_alg)
-
-        results.append([original_acc_sum / n * 100, perturb_accs / n * 100])
-
-    for i in range(len(results)):
-        print(
-            f"Linf norm ≤ {EPSILON_LS[i]:.4f}, "
-            f"clean accuracy:  {results[i][0]:.2f}, "
-            f"perturbed accuracy: {results[i][1]:.2f}"
+        
+        utils.print_safe(
+            f"clean accuracy:  {(original_acc_sum / n * 100):.2f}, "
+            f"perturbed accuracy: {(perturb_accs / n * 100):.2f}"
         )
+
+        results["clean_acc"].append(original_acc_sum / n * 100)
+        results["perturb_acc"].append(perturb_accs / n * 100)
+
+    utils.pickle_dump(results, f"{args.save_dir}/{args.arch}-layer-{args.append_layer}-attk-{args.lp}-{args.attack_alg}.pkl")
 
 
 if __name__ == "__main__":
