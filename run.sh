@@ -6,11 +6,10 @@ which python
 ############# -------------- train ---------------
 ## Uncomment this section to train. remember to comment out the attack section
 
-# toyData="/Users/zhenanshao/Documents/git_repos/ML_toydata/ImageNet"
-# toyCats="/Users/zhenanshao/Documents/git_repos/ML_toydata/ImageNet/toy.txt"
+# toyData="/home/chengxiao/cs543/final_project/toydata/ImageNet"
+# toyCats="/home/chengxiao/cs543/final_project/toydata/ImageNet/toy.txt"
 # python train.py $toyData\
 #     --save-dir "outputs" \
-#     --save-suffix "sigma-2.0" \
 #     --img-folder-txt $toyCats \
 #     --num-category 2 \
 #     --arch "resnet18" \
