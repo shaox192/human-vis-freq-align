@@ -14,6 +14,13 @@ print(f"--> Using device: {device} <--")
 
 parser = argparse.ArgumentParser(description='attack')
 
+num_categories_dict = {2: "toy", # test toy dataset
+                       50: "textshape50",
+                       209: "human16-209",
+                       16: "",
+                       1000: ""
+                       }
+
 #### data
 parser.add_argument('data', metavar='DIR', nargs='?', default='',
                     help='path to dataset (default: imagenet)')
@@ -24,15 +31,18 @@ parser.add_argument('--save-dir', default='.', type=str, help='path to save the 
 parser.add_argument('--model-pth', type=str, help='path to a neural predictor')
 parser.add_argument('--arch', default='resnet18', type=str, help="classifier arch")
 
-parser.add_argument('--category-209', action='store_true', default=True,
-                    help='use the 209 fine-grained categories belonged the 16 basic-level categories')
-parser.add_argument('--category-16', action='store_true', help='use the 16 basic-level categories')
-parser.add_argument('--category-1k', action='store_true', help='use the original 1k categories')
+parser.add_argument('--num-category', default=50, type=int, 
+                    help=f'number of categories to use, must be one of {list(num_categories_dict.keys())}')
+# parser.add_argument('--category-209', action='store_true', default=True,
+#                     help='use the 209 fine-grained categories belonged the 16 basic-level categories')
+# parser.add_argument('--category-16', action='store_true', help='use the 16 basic-level categories')
+# parser.add_argument('--category-1k', action='store_true', help='use the original 1k categories')
 
 parser.add_argument("--append-layer", default="None", type=str, 
                     help="append which layer: [default(None), bandpass, blur] to the beginning of the model")
 parser.add_argument("--kernel-size", default=31, type=int, 
                     help="kernel size for the bandpass/blur layer")
+parser.add_argument("--custom-sigma", default=None, type=float, help="custom sigma for the bandpass layer")
 
 ### attack params
 parser.add_argument('--lp', type=str, default='inf', 
@@ -70,16 +80,16 @@ def main():
     utils.print_safe(f"Data loaded: val: {len(val_loader)}", flush=True)
     
     ## -- create model
-    if args.category_16:
-        num_classes = 16
-    elif args.category_1k:
-        num_classes = 1000
-    else:
-        num_classes = 209
-    classifier = models.get_classifier(args.arch, num_classes=num_classes, pretrained=False)
+    # if args.category_16:
+    #     num_classes = 16
+    # elif args.category_1k:
+    #     num_classes = 1000
+    # else:
+    #     num_classes = 209
+    classifier = models.get_classifier(args.arch, num_classes=args.num_category, pretrained=False)
 
     if args.append_layer == "bandpass":
-        model = models.BandPassNet(classifier, kernel_size=args.kernel_size)
+        model = models.BandPassNet(classifier, kernel_size=args.kernel_size, custom_sigma=args.custom_sigma)
     elif args.append_layer == "blur":
         raise NotImplementedError
         # model = models.BlurNet(classifier)
@@ -116,9 +126,6 @@ def main():
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    
-    if args.category_16 or args.category_1k:
-        args.category_209 = False
     
     args.distributed = False
     args.train_workers = args.workers
