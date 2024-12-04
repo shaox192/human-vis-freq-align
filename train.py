@@ -41,6 +41,9 @@ parser = argparse.ArgumentParser(description='PyTorch imagenet Training')
 parser.add_argument('data', metavar='DIR', nargs='?', default='',
                     help='path to dataset (default: imagenet)')
 parser.add_argument('--save-dir', required=True, type=str, help='path to save the checkpoints')
+parser.add_argument("--save-suffix", default=None, type=str, help="special suffix for the save directory")
+
+
 parser.add_argument('--img-folder-txt', default="./data/textshape50.txt",
                     type=str, help='path to a textfile of sub categories of imagenet to be used')
 
@@ -67,6 +70,7 @@ parser.add_argument("--append-layer", default="None", type=str,
                     help="append which layer: [default(None), bandpass, blur] to the beginning of the model")
 parser.add_argument("--kernel-size", default=31, type=int, 
                     help="kernel size for the bandpass/blur layer")
+parser.add_argument("--custom-sigma", default=None, type=float, help="custom sigma for the bandpass layer")
 
 ############ training parameters
 parser.add_argument('--train_workers', default=8, type=int, metavar='N',
@@ -200,7 +204,10 @@ def main_worker(gpu, ngpus_per_node, args):
       .replace(":", "-")
     )
     # category_str = "209" if args.category_209 else "16" if args.category_16 else "1k"
-    save_dir_name = f"{args.save_dir}/{args.arch}-layer-{args.append_layer}-category-{args.num_category}-{datetime_str}"
+    save_dir_name = f"{args.save_dir}/{args.arch}-layer-{args.append_layer}-category-{args.num_category}"
+    if args.save_suffix:
+        save_dir_name += f"-{args.save_suffix}"
+    save_dir_name += f"-{datetime_str}"
 
     utils.print_safe(f"*** Saving to: {save_dir_name}")
     utils.make_directory(save_dir_name)
@@ -233,7 +240,7 @@ def main_worker(gpu, ngpus_per_node, args):
     classifier = models.get_classifier(args.arch, num_classes=args.num_category)
 
     if args.append_layer == "bandpass":
-        model = models.BandPassNet(classifier, kernel_size=args.kernel_size)
+        model = models.BandPassNet(classifier, kernel_size=args.kernel_size, custom_sigma=args.custom_sigma)
     elif args.append_layer == "blur":
         #TODO: Implement blur layer
         raise NotImplementedError

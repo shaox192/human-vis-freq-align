@@ -146,8 +146,12 @@ def mse(p, q):
     return np.mean((p - q)**2)
 
 
-def human_filter(im_shape, x_freqs):
+def human_filter(im_shape, x_freqs, custom_sigma=None):
     A, mu, sigma = HUMAN_AVG_GAUSS
+    if custom_sigma is not None:
+        sigma = custom_sigma
+    print(f'\t**** Using human filter with Gaussian: A={A}, mu={mu}, sigma={sigma}')
+
     gauss_fit = fit_gaussian(x_freqs, A, mu, sigma, convert_data=True)
     gauss_fit = gauss_fit / gauss_fit.max()  # normalize
 

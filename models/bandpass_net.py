@@ -6,13 +6,13 @@ import numpy as np
 from . import filter
 
 
-def construct_bandpass_filter(kernel_size):
+def construct_bandpass_filter(kernel_size, custom_sigma):
     x_freqs = np.linspace(0, kernel_size, kernel_size)
     x_freqs = (x_freqs / kernel_size) * 224.  # convert to cycles per image, 224 is known for imagenet, need to change for other imagesets
-    gauss_fit, fil_recon = filter.human_filter((kernel_size, kernel_size), x_freqs)
+    gauss_fit, fil_recon = filter.human_filter((kernel_size, kernel_size), x_freqs, custom_sigma)
 
-    fil_recon = np.fft.ifftshift(fil_recon)
-    spatial_filter = np.fft.ifft2(fil_recon)
+    fil_recon_shifted = np.fft.ifftshift(fil_recon)
+    spatial_filter = np.fft.ifft2(fil_recon_shifted)
     spatial_filter = np.fft.ifftshift(spatial_filter)
     spatial_filter_real = np.real(spatial_filter)
     spatial_filter_imag = np.imag(spatial_filter)
@@ -24,7 +24,7 @@ def construct_bandpass_filter(kernel_size):
 
 
 class BandPassNet(nn.Module):
-    def __init__(self, classifier, kernel_size):
+    def __init__(self, classifier, kernel_size, custom_sigma=None):
         """
         :param classifier:
         """
@@ -38,11 +38,11 @@ class BandPassNet(nn.Module):
         self.conv_imag = nn.Conv2d(in_channels, in_channels, kernel_size, 
                                    padding='same', padding_mode='reflect',
                                    bias=False)
-        self.gauss_fit, self.fil_recon, self.spatial_filter_real = self._init_filter(kernel_size, in_channels)
+        self.gauss_fit, self.fil_recon, self.spatial_filter_real = self._init_filter(kernel_size, in_channels, custom_sigma)
 
-    def _init_filter(self, kernel_size, num_channel):
+    def _init_filter(self, kernel_size, num_channel, custom_sigma):
         gauss_fit, fil_recon, \
-            spatial_filter_real, spatial_filter_imag = construct_bandpass_filter(kernel_size)
+            spatial_filter_real, spatial_filter_imag = construct_bandpass_filter(kernel_size, custom_sigma)
 
         with torch.no_grad():
             self.conv_real.weight.zero_()
