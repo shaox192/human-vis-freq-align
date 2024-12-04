@@ -30,18 +30,28 @@ import utils
 import data_loader
 
 model_names = ["resnet18", ]
+num_categories_dict = {2: "toy", # test toy dataset
+                       50: "textshape50",
+                       209: "human16-209",
+                       16: "",
+                       1000: ""
+                       }
 
 parser = argparse.ArgumentParser(description='PyTorch imagenet Training')
 parser.add_argument('data', metavar='DIR', nargs='?', default='',
                     help='path to dataset (default: imagenet)')
 parser.add_argument('--save-dir', required=True, type=str, help='path to save the checkpoints')
-parser.add_argument('--img-folder-txt', default="./data/human16-209.txt",
+parser.add_argument('--img-folder-txt', default="./data/textshape50.txt",
                     type=str, help='path to a textfile of sub categories of imagenet to be used')
 
-parser.add_argument('--category-209', action='store_true', default=True,
-                    help='use the 209 fine-grained categories belonged the 16 basic-level categories')
-parser.add_argument('--category-16', action='store_true', help='use the 16 basic-level categories')
-parser.add_argument('--category-1k', action='store_true', help='use the original 1k categories')
+parser.add_argument('--num-category', default=50, type=int, 
+                    help=f'number of categories to use, must be one of {list(num_categories_dict.keys())}')
+# parser.add_argument('--category-209', action='store_true', default=True,
+#                     help='use the 209 fine-grained categories belonged the 16 basic-level categories')
+# parser.add_argument('--category-209', action='store_true', default=True,
+#                     help='use the 209 fine-grained categories belonged the 16 basic-level categories')
+# parser.add_argument('--category-16', action='store_true', help='use the 16 basic-level categories')
+# parser.add_argument('--category-1k', action='store_true', help='use the original 1k categories')
 
 # parser.add_argument('--orig-imagenet-lbs', type=str, help='path to the orig imagenet mapping')
 
@@ -116,8 +126,12 @@ parser.add_argument('--scheduler-step-size', type=int, default=20, help='stepLR 
 def main():
     args = parser.parse_args()
 
-    if args.category_16 or args.category_1k:
-        args.category_209 = False
+    # if args.category_16 or args.category_1k:
+    #     args.category_209 = False
+
+    assert args.num_category in num_categories_dict, f"num_category must be one of {list(num_categories_dict.keys())}"
+    assert num_categories_dict[args.num_category] in args.img_folder_txt, \
+        f"num_category {args.num_category} does not match the txt file {args.img_folder_txt}"
 
     utils.print_safe("\n***check params ---------")
     for arg in vars(args):
@@ -185,8 +199,8 @@ def main_worker(gpu, ngpus_per_node, args):
       .replace(" ", "-")
       .replace(":", "-")
     )
-    category_str = "209" if args.category_209 else "16" if args.category_16 else "1k"
-    save_dir_name = f"{args.save_dir}/{args.arch}-layer-{args.append_layer}-category-{category_str}-{datetime_str}"
+    # category_str = "209" if args.category_209 else "16" if args.category_16 else "1k"
+    save_dir_name = f"{args.save_dir}/{args.arch}-layer-{args.append_layer}-category-{args.num_category}-{datetime_str}"
 
     utils.print_safe(f"*** Saving to: {save_dir_name}")
     utils.make_directory(save_dir_name)
@@ -210,13 +224,13 @@ def main_worker(gpu, ngpus_per_node, args):
     utils.print_safe(f"Data loaded: train: {len(train_loader)}, val: {len(val_loader)}", flush=True)
 
     ## -- create model
-    if args.category_16:
-        num_classes = 16
-    elif args.category_1k:
-        num_classes = 1000
-    else:
-        num_classes = 209
-    classifier = models.get_classifier(args.arch, num_classes=num_classes)
+    # if args.category_16:
+    #     num_classes = 16
+    # elif args.category_1k:
+    #     num_classes = 1000
+    # else:
+    #     num_classes = 209
+    classifier = models.get_classifier(args.arch, num_classes=args.num_category)
 
     if args.append_layer == "bandpass":
         model = models.BandPassNet(classifier, kernel_size=args.kernel_size)

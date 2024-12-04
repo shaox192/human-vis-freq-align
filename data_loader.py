@@ -217,11 +217,7 @@ def load_data_folder(prt_data_pth: str,
 
 
 def build_data_loader(args):
-    if args.category_1k:
-        selected_category_ls = []
-        raise NotImplementedError("Not implemented yet")
-    elif args.category_16:
-        selected_category_ls = []
+    if args.num_category in [16, 1000]:
         raise NotImplementedError("Not implemented yet")
     else:
         selected_category_ls = load_selected_categories(args.img_folder_txt)

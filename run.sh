@@ -11,7 +11,7 @@ toyCats="/Users/zhenanshao/Documents/git_repos/ML_toydata/ImageNet/toy.txt"
 python train.py $toyData\
     --save-dir "outputs" \
     --img-folder-txt $toyCats \
-    --category-209 \
+    --num-category 2 \
     --arch "resnet18" \
     --pretrained \
     --append-layer "bandpass" \
