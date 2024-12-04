@@ -1,0 +1,50 @@
+n01514859: hen
+n01532829: house finch 
+n02086079: Pekinese
+n02123045: tabby
+n02123597: Siamese cat
+n02133161: American black bear
+n02504013: Indian elephant
+n02708093: analog clock
+n02823428: beer bottle
+n03041632: cleaver
+n03196217: digital clock
+n03376595: folding chair
+n03770679: minivan
+n03937543: pill bottle
+n04111531: rotisserie
+n04429376: throne
+n04548280: wall clock
+n01530575: brambling
+n02085782: Japanese spaniel
+n02088364: beagle
+n02123159: tiger cat
+n02124075: Egyptian cat
+n02134084: ice bear
+n02504458: African elephant
+n02791124: barber chair
+n02835271: bicycle-built-for-two
+n03085013: computer keyboard
+n03344393: fireboat
+n03417042: garbage truck
+n03792782: mountain bike
+n03983396: pop bottle
+n04273569: speedboat
+n04461696: tow truck
+n04557648: water bottle
+n01531178: goldfinch
+n02085936: Maltese dog
+n02113799: standard poodle
+n02123394: Persian cat
+n02132136: brown bear
+n02134418: sloth bear
+n02690373: airliner
+n02814533: beach wagon
+n02951358: canoe
+n03100240: convertible
+n03345487: fire engine
+n03662601: lifeboat
+n03796401: moving van
+n04099969: rocking chair
+n04285008: sports car
+n04505470: typewriter keyboard
