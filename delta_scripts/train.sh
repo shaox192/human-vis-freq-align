@@ -25,13 +25,14 @@ export SLURM_MPI_TYPE=pmi2
 PRT_DIR="/scratch/bbtb"
 
 saveD="${PRT_DIR}/zhenans2/CV_bandpass_adv/training_outputs"
-imgFolderTXT="${PRT_DIR}/zhenans2/CV_bandpass_adv/human-vis-freq-align/data/human16-209.txt"
+imgFolderTXT="${PRT_DIR}/textshape50.txt"
+# "${PRT_DIR}/zhenans2/CV_bandpass_adv/human-vis-freq-align/data/human16-209.txt"
 # "${PRT_DIR}/coco50.txt"
 
 srun python ${PRT_DIR}/zhenans2/CV_bandpass_adv/human-vis-freq-align/train.py ${PRT_DIR}/imagenet \
         --save-dir $saveD \
         --img-folder-txt $imgFolderTXT \
-        --category-209 \
+        --num-category 50 \
         --arch "resnet18" \
         --pretrained \
         --append-layer "bandpass" \
