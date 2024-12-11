@@ -1,15 +1,12 @@
 import numpy as np
 import torch
-import torchvision.transforms as T
-from torchvision.transforms.functional import gaussian_blur
 from foolbox import PyTorchModel, accuracy
-from skimage.filters import gaussian
 import os
 from PIL import Image
 
 os.environ["MAGICK_HOME"] = "/home/chengxiao/anaconda3/envs/cs543_conda"
 os.environ["PATH"] += os.pathsep + os.path.join(os.environ["MAGICK_HOME"], "bin")
-from imagenet_c import corrupt
+from .imagenet_c_corrupt import corrupt
 
 
 def save_image(tensor_image, file_name):
@@ -37,7 +34,7 @@ def perturbate(images, device, severity=3, corruption_name="gaussian_noise"):
             torch.from_numpy(corrupted_image_np).float().div(255.0).to(device)
         )  # Normalize to [0, 1]
         perturbed_image = perturbed_image.permute(2, 0, 1)
-        save_image(perturbed_image, f"perturbed_image_{i}.png")
+        # save_image(perturbed_image, f"perturbed_image_{i}.png")
         perturbed_images.append(perturbed_image)
     return perturbed_images
 

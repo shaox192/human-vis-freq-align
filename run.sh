@@ -28,20 +28,30 @@ which python
 ############# -------------- attack ---------------
 ## Uncomment this section to attack. remember to comment out the train section
 
-toyData="/Users/zhenanshao/Documents/git_repos/ML_toydata/ImageNet"
-toyCats="/Users/zhenanshao/Documents/git_repos/ML_toydata/ImageNet/toy.txt"
-modelP="./outputs/resnet18-layer-bandpass-category-2-sigma-2.0-2024-12-03-22-17-48/ckpt_epk1.pth"
+toyData="/home/chengxiao/cs543/final_project/toydata/ImageNet"
+toyCats="/home/chengxiao/cs543/final_project/toydata/ImageNet/toy.txt"
+modelP="/home/chengxiao/cs543/final_project/human-vis-freq-align/train_outputs/resnet18-layer-bandpass-category-50-2024-12-03-22-04-13/ckpt_epk40.pth"
+# modelP="/home/chengxiao/cs543/final_project/human-vis-freq-align/train_outputs/resnet18-layer-None-category-50-2024-12-03-22-47-49/ckpt_epk40.pth"
 
+# attack-alg: "natual"
+# severity: for natual attack, strength with which to corrupt on image; an integer in [0, 5]
+# perturb-type: one of 'gaussian_noise', 'shot_noise', 'impulse_noise', 'defocus_blur',
+                    # 'glass_blur', 'motion_blur', 'zoom_blur', 'snow', 'frost', 'fog',
+                    # 'brightness', 'contrast', 'elastic_transform', 'pixelate', 'jpeg_compression',
+                    # 'speckle_noise', 'gaussian_blur', 'spatter', 'saturate';
+                    # the last four are validation functions
 python attack.py $toyData\
     --img-folder-txt $toyCats \
     --model-pth $modelP \
     --arch "resnet18" \
-    --num-category 2 \
+    --num-category 50 \
     --append-layer "bandpass" \
     --kernel-size 31 \
     --custom-sigma 2.0 \
     --lp "linf" \
-    --attack-alg "fgsm" \
+    --attack-alg "natural"\
+    --severity 0\
+    --perturb-type "saturate"\
     --seed 415 \
     --batch-size 3 \
-    --workers 0
+    --workers 0\
