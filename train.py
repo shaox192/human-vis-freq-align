@@ -242,9 +242,11 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.append_layer == "bandpass":
         model = models.BandPassNet(classifier, kernel_size=args.kernel_size, custom_sigma=args.custom_sigma)
     elif args.append_layer == "blur":
-        #TODO: Implement blur layer
-        raise NotImplementedError
-        # model = models.BlurNet(classifier)
+        model = models.BlurNet(classifier, sigma=args.custom_sigma)
+        utils.print_safe(f"Using blur layer, sigma: {args.custom_sigma}, "
+                         f"thus kernel size is: {model.kernel_size}.\n"
+                         f"\t!!IGNORING the args.kernel_size argument!!")
+
     else:
         model = classifier
     utils.print_safe(model)
@@ -381,7 +383,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 "val_acc1_epk": val_acc1_epk,
                 "val_acc5_epk": val_acc5_epk,
                 }, 
-                f"{save_dir_name}/stats_epk{epoch}.pkl")
+                f"{save_dir_name}/stats.pkl")
 
 
 def train(train_loader, model, criterion, optimizer, epoch, device, args):
