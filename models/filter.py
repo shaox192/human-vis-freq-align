@@ -24,10 +24,14 @@ def butterworth_filter(shape, cutoff, order, high_pass=False):
     return H
 
 
-def gaussian_filter(shape, sigma, high_pass=False):
+def gaussian_filter(shape, sigma, equate_freq_range:tuple=None, high_pass=False):
     h, w = shape
-    u = np.arange(-(w//2), -(w//2) + shape[1])    
-    v = np.arange(-(h//2), -(h//2) + shape[1])   
+    u = np.arange(-(w//2), -(w//2) + shape[1])
+    v = np.arange(-(h//2), -(h//2) + shape[1])
+    if equate_freq_range is not None:
+        u = u / w * equate_freq_range[0]
+        v = v / h * equate_freq_range[1]
+
     U, V = np.meshgrid(u, v)
 
     D = np.sqrt(U**2 + V**2)
