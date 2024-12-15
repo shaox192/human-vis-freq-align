@@ -28,10 +28,10 @@ which python
 ############# -------------- attack ---------------
 ## Uncomment this section to attack. remember to comment out the train section
 
-toyData="/home/chengxiao/cs543/final_project/toydata/ImageNet"
-toyCats="/home/chengxiao/cs543/final_project/toydata/ImageNet/toy.txt"
-modelP="/home/chengxiao/cs543/final_project/human-vis-freq-align/train_outputs/resnet18-layer-bandpass-category-50-2024-12-03-22-04-13/ckpt_epk40.pth"
-# modelP="/home/chengxiao/cs543/final_project/human-vis-freq-align/train_outputs/resnet18-layer-None-category-50-2024-12-03-22-47-49/ckpt_epk40.pth"
+toyData="/home/chengxiao/cs543/final_project/subsetdata/Imagenet_subset/ILSVRC/Data/CLS-LOC"
+toyCats="/home/chengxiao/cs543/final_project/human-vis-freq-align/data/textshape50.txt"
+# modelP="/home/chengxiao/cs543/final_project/human-vis-freq-align/train_outputs/resnet18-layer-bandpass-category-50-2024-12-03-22-04-13/ckpt_epk40.pth"
+modelP="/home/chengxiao/cs543/final_project/human-vis-freq-align/train_outputs/resnet18-layer-None-category-50-2024-12-03-22-47-49/ckpt_epk40.pth"
 
 # attack-alg: "natual"
 # severity: for natual attack, strength with which to corrupt on image; an integer in [0, 5]
@@ -45,13 +45,12 @@ python attack.py $toyData\
     --model-pth $modelP \
     --arch "resnet18" \
     --num-category 50 \
-    --append-layer "bandpass" \
     --kernel-size 31 \
     --custom-sigma 2.0 \
     --lp "linf" \
     --attack-alg "natural"\
-    --severity 0\
-    --perturb-type "saturate"\
+    --severity 3\
+    --perturb-type "gaussian_noise"\
     --seed 415 \
     --batch-size 3 \
     --workers 0\

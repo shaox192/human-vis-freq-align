@@ -38,7 +38,6 @@ def foolbox_attack(val_loader, model, device, epsilon, lp, attack_alg, kwargs={}
         images = images.to(device)
         target = target.to(device)
         clean_acc = accuracy(fmodel, images, target)
-
         n += len(images)
         original_acc_sum += clean_acc * len(images)
 

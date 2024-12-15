@@ -163,23 +163,61 @@ def main():
     model = model.to(device).eval()
     utils.print_safe(model)
 
-    results = {"args": args, "eps": EPSILON_LS, "clean_acc": [], "perturb_acc": []}
     if args.attack_alg == "natural":
-        original_acc_sum, perturb_accs, n = attack_alg.natural_attack(
-            val_loader,
-            model,
-            device,
-            severity=args.severity,
-            perturbation=args.perturb_type,
-        )
-        utils.print_safe(
-            f"clean accuracy:  {(original_acc_sum / n * 100):.2f}, "
-            f"perturbed accuracy: {(perturb_accs / n * 100):.2f}"
-        )
+        results = []
+        perturb_types = [
+            "gaussian_noise",
+            "shot_noise",
+            "impulse_noise",
+            # "defocus_blur",
+            # "glass_blur",
+            # "motion_blur",
+            # "zoom_blur",
+            "snow",
+            "frost",
+            "fog",
+            "brightness",
+            "contrast",
+            "elastic_transform",
+            "pixelate",
+            "jpeg_compression",
+            "speckle_noise",
+            "gaussian_blur",
+            "spatter",
+            "saturate",
+        ]
+        for perturb in perturb_types:
+            results_per_type = {}
+            results_per_type["type"] = perturb
+            results_per_type["plot"] = []
+            for severity in range(0, 6):
+                print(perturb, severity)
+                original_acc_sum, perturb_accs, n = attack_alg.natural_attack(
+                    val_loader,
+                    model,
+                    device,
+                    severity=severity,
+                    perturbation=perturb,
+                )
+                utils.print_safe(
+                    f"clean accuracy:  {(original_acc_sum / n * 100):.2f}, "
+                    f"perturbed accuracy: {(perturb_accs / n * 100):.2f}"
+                )
 
-        results["clean_acc"].append(original_acc_sum / n * 100)
-        results["perturb_acc"].append(perturb_accs / n * 100)
+                result = {
+                    "severity": severity,
+                    "clean_acc": original_acc_sum / n * 100,
+                    "perturb_acc": perturb_accs / n * 100,
+                }
+                results_per_type["plot"].append(result)
+
+            results.append(results_per_type)
+        utils.pickle_dump(
+            results,
+            f"{args.save_dir}/{args.arch}-layer-{args.append_layer}-attk-{args.attack_alg}.pkl",
+        )
     else:
+        results = {"args": args, "eps": EPSILON_LS, "clean_acc": [], "perturb_acc": []}
         for i, epsilon in enumerate(EPSILON_LS):
             print(
                 f"\n-> Current Epsilon [{i}]/[{len(EPSILON_LS)}]: {epsilon:4f} ({epsilon * 255:.0f}/255)"
@@ -197,10 +235,10 @@ def main():
             results["clean_acc"].append(original_acc_sum / n * 100)
             results["perturb_acc"].append(perturb_accs / n * 100)
 
-    utils.pickle_dump(
-        results,
-        f"{args.save_dir}/{args.arch}-layer-{args.append_layer}-attk-{args.lp}-{args.attack_alg}.pkl",
-    )
+        utils.pickle_dump(
+            results,
+            f"{args.save_dir}/{args.arch}-layer-{args.append_layer}-attk-{args.lp}-{args.attack_alg}.pkl",
+        )
 
 
 if __name__ == "__main__":

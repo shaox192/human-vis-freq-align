@@ -45,7 +45,9 @@ def natural_attack(val_loader, model, device, severity, perturbation, **kwargs):
     perturb_acc_sum = 0.0
     n = 0
     fmodel = PyTorchModel(model, bounds=(-3.0, 3.0))
-    for images, target in val_loader:
+    for i, (images, target) in enumerate(val_loader):
+        # if i % 100 == 0:
+        #     print(i)
         images, target = images.to(device), target.to(device)
 
         clean_acc = accuracy(fmodel, images, target)

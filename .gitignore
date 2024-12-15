@@ -5,7 +5,8 @@
 train_outputs/
 ignore_stuff/
 outputs/
-
+*.pkl
+*.zip
 
 
 # Byte-compiled / optimized / DLL files
