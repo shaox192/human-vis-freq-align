@@ -28,18 +28,6 @@ which python
 ############# -------------- attack ---------------
 ## Uncomment this section to attack. remember to comment out the train section
 
-<<<<<<< HEAD
-toyData="/home/chengxiao/cs543/final_project/subsetdata/Imagenet_subset/ILSVRC/Data/CLS-LOC"
-toyCats="/home/chengxiao/cs543/final_project/human-vis-freq-align/data/textshape50.txt"
-# modelP="/home/chengxiao/cs543/final_project/human-vis-freq-align/train_outputs/resnet18-layer-bandpass-category-50-2024-12-03-22-04-13/ckpt_epk40.pth"
-modelP="/home/chengxiao/cs543/final_project/human-vis-freq-align/train_outputs/resnet18-layer-None-category-50-2024-12-03-22-47-49/ckpt_epk40.pth"
-=======
-toyData="/home/chengxiao/cs543/final_project/toydata/ImageNet"
-toyCats="/home/chengxiao/cs543/final_project/toydata/ImageNet/toy.txt"
-modelP="/home/chengxiao/cs543/final_project/human-vis-freq-align/train_outputs/resnet18-layer-bandpass-category-50-2024-12-03-22-04-13/ckpt_epk40.pth"
-# modelP="/home/chengxiao/cs543/final_project/human-vis-freq-align/train_outputs/resnet18-layer-None-category-50-2024-12-03-22-47-49/ckpt_epk40.pth"
->>>>>>> 26f8b32 (update natural attack)
-
 # attack-alg: "natual"
 # severity: for natual attack, strength with which to corrupt on image; an integer in [0, 5]
 # perturb-type: one of 'gaussian_noise', 'shot_noise', 'impulse_noise', 'defocus_blur',
@@ -52,21 +40,13 @@ python attack.py $toyData\
     --model-pth $modelP \
     --arch "resnet18" \
     --num-category 50 \
-<<<<<<< HEAD
-=======
     --append-layer "bandpass" \
->>>>>>> 26f8b32 (update natural attack)
     --kernel-size 31 \
     --custom-sigma 2.0 \
     --lp "linf" \
     --attack-alg "natural"\
-<<<<<<< HEAD
     --severity 3\
     --perturb-type "gaussian_noise"\
-=======
-    --severity 0\
-    --perturb-type "saturate"\
->>>>>>> 26f8b32 (update natural attack)
     --seed 415 \
     --batch-size 3 \
     --workers 0\
