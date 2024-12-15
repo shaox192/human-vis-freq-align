@@ -154,9 +154,11 @@ def main():
         )
     elif args.append_layer == "blur":
         model = models.BlurNet(classifier, sigma=args.custom_sigma)
-        utils.print_safe(f"Using blur layer, sigma: {args.custom_sigma}, "
-                         f"thus kernel size is: {model.kernel_size}.\n"
-                         f"\t!!IGNORING the args.kernel_size argument!!")
+        utils.print_safe(
+            f"Using blur layer, sigma: {args.custom_sigma}, "
+            f"thus kernel size is: {model.kernel_size}.\n"
+            f"\t!!IGNORING the args.kernel_size argument!!"
+        )
         # raise NotImplementedError
         # model = models.BlurNet(classifier)
     else:
@@ -207,7 +209,6 @@ def main():
                     f"clean accuracy:  {(original_acc_sum / n * 100):.2f}, "
                     f"perturbed accuracy: {(perturb_accs / n * 100):.2f}"
                 )
-<<<<<<< HEAD
                 if severity == 0:
                     result = {
                         "severity": severity,
@@ -222,16 +223,6 @@ def main():
                     }
                 results_per_type["plot"].append(result)
 
-=======
-
-                result = {
-                    "severity": severity,
-                    "clean_acc": original_acc_sum / n * 100,
-                    "perturb_acc": perturb_accs / n * 100,
-                }
-                results_per_type["plot"].append(result)
-
->>>>>>> c0dcf2a (update natural noise type, serverity, and plot)
             results.append(results_per_type)
         utils.pickle_dump(
             results,
