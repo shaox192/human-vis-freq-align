@@ -91,7 +91,11 @@ def main():
     if args.append_layer == "bandpass":
         model = models.BandPassNet(classifier, kernel_size=args.kernel_size, custom_sigma=args.custom_sigma)
     elif args.append_layer == "blur":
-        raise NotImplementedError
+        model = models.BlurNet(classifier, sigma=args.custom_sigma)
+        utils.print_safe(f"Using blur layer, sigma: {args.custom_sigma}, "
+                         f"thus kernel size is: {model.kernel_size}.\n"
+                         f"\t!!IGNORING the args.kernel_size argument!!")
+        # raise NotImplementedError
         # model = models.BlurNet(classifier)
     else:
         model = classifier
