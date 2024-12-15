@@ -207,6 +207,7 @@ def main():
                     f"clean accuracy:  {(original_acc_sum / n * 100):.2f}, "
                     f"perturbed accuracy: {(perturb_accs / n * 100):.2f}"
                 )
+<<<<<<< HEAD
                 if severity == 0:
                     result = {
                         "severity": severity,
@@ -221,6 +222,16 @@ def main():
                     }
                 results_per_type["plot"].append(result)
 
+=======
+
+                result = {
+                    "severity": severity,
+                    "clean_acc": original_acc_sum / n * 100,
+                    "perturb_acc": perturb_accs / n * 100,
+                }
+                results_per_type["plot"].append(result)
+
+>>>>>>> c0dcf2a (update natural noise type, serverity, and plot)
             results.append(results_per_type)
         utils.pickle_dump(
             results,

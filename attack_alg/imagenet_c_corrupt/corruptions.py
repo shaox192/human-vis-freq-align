@@ -274,8 +274,6 @@ def frost(x, severity=1):
         "attack_alg/imagenet_c_corrupt/frost6.jpg",
     ][idx]
     frost = cv2.imread(filename)
-    print(frost)
-    print(os.getcwd())
     # randomly crop and convert to rgb
     x_start, y_start = np.random.randint(0, frost.shape[0] - 224), np.random.randint(
         0, frost.shape[1] - 224
