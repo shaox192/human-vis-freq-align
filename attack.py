@@ -207,12 +207,18 @@ def main():
                     f"clean accuracy:  {(original_acc_sum / n * 100):.2f}, "
                     f"perturbed accuracy: {(perturb_accs / n * 100):.2f}"
                 )
-
-                result = {
-                    "severity": severity,
-                    "clean_acc": original_acc_sum / n * 100,
-                    "perturb_acc": perturb_accs / n * 100,
-                }
+                if severity == 0:
+                    result = {
+                        "severity": severity,
+                        "clean_acc": original_acc_sum / n * 100,
+                        "perturb_acc": original_acc_sum / n * 100,
+                    }
+                else:
+                    result = {
+                        "severity": severity,
+                        "clean_acc": original_acc_sum / n * 100,
+                        "perturb_acc": perturb_accs / n * 100,
+                    }
                 results_per_type["plot"].append(result)
 
             results.append(results_per_type)
