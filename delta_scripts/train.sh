@@ -4,7 +4,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=16   # <- match to OMP_NUM_THREADS
 #SBATCH --partition=gpuA40x4
-#SBATCH --time=04:00:00
+#SBATCH --time=03:00:00
 #SBATCH --account=bbtb-delta-gpu
 #SBATCH --job-name=CVBandpass
 ### GPU options ###
@@ -24,6 +24,9 @@ export SLURM_MPI_TYPE=pmi2
 
 PRT_DIR="/scratch/bbtb"
 
+
+sig=1.5
+saveSuffix="humanfil2"
 saveD="${PRT_DIR}/zhenans2/CV_bandpass_adv/training_outputs"
 imgFolderTXT="${PRT_DIR}/textshape50.txt"
 # "${PRT_DIR}/zhenans2/CV_bandpass_adv/human-vis-freq-align/data/human16-209.txt"
@@ -31,6 +34,7 @@ imgFolderTXT="${PRT_DIR}/textshape50.txt"
 
 srun python ${PRT_DIR}/zhenans2/CV_bandpass_adv/human-vis-freq-align/train.py ${PRT_DIR}/imagenet \
         --save-dir $saveD \
+        --save-suffix $saveSuffix \
         --img-folder-txt $imgFolderTXT \
         --num-category 50 \
         --arch "resnet18" \
@@ -46,6 +50,8 @@ srun python ${PRT_DIR}/zhenans2/CV_bandpass_adv/human-vis-freq-align/train.py ${
         --print-freq 1 \
         --multiprocessing-distributed \
         --dist-url 'tcp://127.0.0.1:2000' --dist-backend 'nccl' --world-size 1 --rank 0
-        
+
+# --custom-sigma $sig \
+
 exit 
 
