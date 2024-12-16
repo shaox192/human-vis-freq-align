@@ -205,10 +205,6 @@ def main():
                     severity=severity,
                     perturbation=perturb,
                 )
-                utils.print_safe(
-                    f"clean accuracy:  {(original_acc_sum / n * 100):.2f}, "
-                    f"perturbed accuracy: {(perturb_accs / n * 100):.2f}"
-                )
                 if severity == 0:
                     result = {
                         "severity": severity,
@@ -221,12 +217,16 @@ def main():
                         "clean_acc": original_acc_sum / n * 100,
                         "perturb_acc": perturb_accs / n * 100,
                     }
+                utils.print_safe(
+                    f"clean accuracy:  {result['clean_acc']}, "
+                    f"perturbed accuracy: {result['perturb_acc']}",
+                )
                 results_per_type["plot"].append(result)
 
             results.append(results_per_type)
         utils.pickle_dump(
             results,
-            f"{args.save_dir}/{args.arch}-layer-{args.append_layer}-attk-{args.attack_alg}.pkl",
+            f"{args.save_dir}/{args.arch}-layer-{args.append_layer}-{args.custom_sigma}-attk-{args.attack_alg}.pkl",
         )
     else:
         results = {"args": args, "eps": EPSILON_LS, "clean_acc": [], "perturb_acc": []}
