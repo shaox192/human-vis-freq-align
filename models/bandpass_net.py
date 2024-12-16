@@ -9,7 +9,7 @@ from . import filter
 def construct_bandpass_filter(kernel_size, custom_sigma):
     x_freqs = np.linspace(0, kernel_size, kernel_size)
     x_freqs = (x_freqs / kernel_size) * 224.  # convert to cycles per image, 224 is known for imagenet, need to change for other imagesets
-    gauss_fit, fil_recon = filter.human_filter((kernel_size, kernel_size), x_freqs, custom_sigma)
+    gauss_fit, fil_recon = filter.human_filter_2((kernel_size, kernel_size), x_freqs, custom_sigma)
 
     fil_recon_shifted = np.fft.ifftshift(fil_recon)
     spatial_filter = np.fft.ifft2(fil_recon_shifted)
