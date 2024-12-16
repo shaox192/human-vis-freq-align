@@ -3,7 +3,7 @@ import numpy as np
 import numpy as np
 from scipy.interpolate import interp1d
 from scipy.stats import entropy
-
+import matplotlib.pyplot as plt
 
 def butterworth_filter(shape, cutoff, order, high_pass=False):
     # https://ocw.mit.edu/courses/res-6-007-signals-and-systems-spring-2011/12cab215afbbe6694402d8d6458ce76f_MITRES_6_007S11_lec24.pdf
@@ -161,3 +161,32 @@ def human_filter(im_shape, x_freqs, custom_sigma=None):
 
     fil_recon = radialmean2filter(gauss_fit, im_shape)
     return gauss_fit, fil_recon
+
+
+def human_filter_2(im_shape, x_freqs, custom_sigma=None, enhance_factor=2, base_level=0.5):
+
+    A, mu, sigma = HUMAN_AVG_GAUSS
+    if custom_sigma is not None:
+        sigma = custom_sigma
+    print(
+        f'\t**** Using enhanced human filter with Gaussian: A={A}, mu={mu}, sigma={sigma}, enhance_factor={enhance_factor}')
+
+    gauss_fit = fit_gaussian(x_freqs, A, mu, sigma, convert_data=True)
+    gauss_fit = gauss_fit / gauss_fit.max()
+
+    combined_fit = base_level + (enhance_factor - base_level) * gauss_fit
+    combined_fit = combined_fit / combined_fit.max()
+
+    fil_recon = radialmean2filter(combined_fit, im_shape)
+
+    # plt.figure(figsize=(8, 5))
+    # plt.plot(x_freqs, gauss_fit, label=f'Original Gaussian (sigma={sigma})')
+    # plt.plot(x_freqs, combined_fit, label=f'Enhanced Gaussian (factor={enhance_factor}, base_level={base_level})')
+    # plt.title("Enhanced Frequency Response of Human Filter")
+    # plt.xlabel("Frequency (cycles per degree)")
+    # plt.ylabel("Amplitude")
+    # plt.grid(True)
+    # plt.legend()
+    # plt.show()
+
+    return combined_fit, fil_recon
