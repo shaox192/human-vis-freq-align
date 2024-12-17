@@ -226,7 +226,7 @@ def main():
             results.append(results_per_type)
         utils.pickle_dump(
             results,
-            f"{args.save_dir}/{args.arch}-layer-{args.append_layer}-{args.custom_sigma}-attk-{args.attack_alg}.pkl",
+            f"resnet18-layer-bandpass-humanfil2-attk-natural.pkl",
         )
     else:
         results = {"args": args, "eps": EPSILON_LS, "clean_acc": [], "perturb_acc": []}

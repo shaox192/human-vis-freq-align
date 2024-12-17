@@ -8,7 +8,7 @@ with open("./new_resnet18-layer-None-attk-natural.pkl", "rb") as f:
 with open("./new_resnet18-layer-bandpass-attk-natural.pkl", "rb") as f:
     bandpass_results = pickle.load(f)
 
-with open("./resnet18-layer-bandpass-2.0-attk-natural.pkl", "rb") as f:
+with open("./resnet18-layer-bandpass-humanfil2-attk-natural.pkl", "rb") as f:
     bandpass_human_results = pickle.load(f)
 
 with open("./resnet18-layer-blur-1.5-attk-natural.pkl", "rb") as f:
@@ -20,9 +20,9 @@ results_list = [
     bandpass_results,
     bandpass_human_results,
     blur_15_results,
-    blur_40_results,
+    # blur_40_results,
 ]
-results_label = ["baseline", "bandpass", "human", "blur15", "blur40"]
+results_label = ["bl", "hcbp", "hcbe", "blur"]
 plot_types = perturb_types = [
     "gaussian_noise",
     "shot_noise",
@@ -44,23 +44,40 @@ plot_types = perturb_types = [
     "spatter",
     "saturate",
 ]
-for plot_type in plot_types:
-    plt.figure(figsize=(10, 6))
+clr_palette = {"bl": "black", "blur": "blue", "hcbp": "red", "hcbe": "purple"}
+plot_lb = {"bl": "Baseline", "blur": "Gaussian-blur", "hcbp": "HC-BP", "hcbe": "HC-BE"}
+
+fig, axes = plt.subplots(3, 5, figsize=(25, 15))
+axes = axes.flatten()
+for idx, plot_type in enumerate(plot_types):
+    ax = axes[idx]
     # bax = brokenaxes(ylims=((0, 15), (60, 100)), hspace=0.1)
     for i, results in enumerate(results_list):
         plot_info = [r["plot"] for r in results if r["type"] == plot_type][0]
-        severities = [info["severity"] for info in plot_info]
-        accuracies = [info["perturb_acc"] for info in plot_info]
+        severities = [info["severity"] for info in plot_info][1:]
+        accuracies = [info["perturb_acc"] for info in plot_info][1:]
         # bax.plot(severities, accuracies, marker="o", label=results_label[i])
-        plt.plot(severities, accuracies, marker="o", label=results_label[i])
+        color = clr_palette.get(
+            results_label[i], "gray"
+        )  # Default to gray if not in palette
+        label = plot_lb.get(results_label[i], results_label[i])
+        ax.set_xticks(range(1, 6))
+        ax.plot(severities, accuracies, marker="o", color=color, label=label)
 
     # bax.set_title(f"{plot_type}")
     # bax.set_xlabel("Severity")
     # bax.set_ylabel("Accuracy")
     # bax.legend(title="Type")
-    plt.title("Accuracy vs Severity")
-    plt.xlabel("Severity")
-    plt.ylabel("Accuracy")
-    plt.legend(title="Type")
-    # plt.grid(False)
-    plt.savefig(f"plot/{plot_type}")
+    ax.set_title(f"{plot_type}")
+    ax.set_xlabel("Severity")
+    ax.set_ylabel("Accuracy(%)")
+    ax.legend(title="Type")
+
+for idx in range(len(plot_types), len(axes)):
+    fig.delaxes(axes[idx])
+
+# Adjust spacing between subplots
+plt.tight_layout()
+
+# Save the big image
+plt.savefig("plot/whole_image.png", dpi=300)
