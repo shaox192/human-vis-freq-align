@@ -5,19 +5,19 @@ which python
 
 ############# -------------- train ---------------
 ## Uncomment this section to train. remember to comment out the attack section
-
+# saveSuffix="sigma-1.5"
 # toyData="/Users/zhenanshao/Documents/git_repos/ML_toydata/ImageNet"
 # toyCats="/Users/zhenanshao/Documents/git_repos/ML_toydata/ImageNet/toy.txt"
 # python train.py $toyData\
 #     --save-dir "outputs" \
-#     --save-suffix "sigma-2.0" \
+#     --save-suffix $saveSuffix \
 #     --img-folder-txt $toyCats \
 #     --num-category 2 \
 #     --arch "resnet18" \
 #     --pretrained \
-#     --append-layer "bandpass" \
+#     --append-layer "blur" \
 #     --kernel-size 31 \
-#     --custom-sigma 2.0 \
+#     --custom-sigma 1.5 \
 #     --seed 415 \
 #     --batch-size 3 \
 #     --lr 0.01 \
@@ -31,16 +31,16 @@ which python
 
 toyData="/Users/zhenanshao/Documents/git_repos/ML_toydata/ImageNet"
 toyCats="/Users/zhenanshao/Documents/git_repos/ML_toydata/ImageNet/toy.txt"
-modelP="./outputs/resnet18-layer-bandpass-category-2-sigma-2.0-2024-12-03-22-17-48/ckpt_epk1.pth"
+modelP="./outputs/resnet18-layer-blur-category-2-sigma-1.5-2024-12-14-14-00-42/ckpt_epk1.pth"
 
 python attack.py $toyData\
     --img-folder-txt $toyCats \
     --model-pth $modelP \
     --arch "resnet18" \
     --num-category 2 \
-    --append-layer "bandpass" \
+    --append-layer "blur" \
     --kernel-size 31 \
-    --custom-sigma 2.0 \
+    --custom-sigma 1.5 \
     --lp "linf" \
     --attack-alg "fgsm" \
     --seed 415 \
