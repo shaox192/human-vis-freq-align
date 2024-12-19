@@ -2,6 +2,12 @@
 
 This is the official code repo for CS543 CV FA24 course project
 
+
+<p align="center">
+  <img src="docs/model_only.png" alt="model" width="90%">
+</p>
+
+
 ***
 ### Folders and Files
 
