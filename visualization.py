@@ -10,60 +10,6 @@ import numpy as np
 from models import BandPassNet, get_classifier, BlurNet
 import torch.nn.functional as F
 
-def load_model(model_type="BandPassNet", weight_path=None, num_classes=50, kernel_size=31, sigma=1.5):
-    classifier = get_classifier("resnet18", num_classes, pretrained=True)
-
-    if model_type == "BandPassNet":
-        model = BandPassNet(classifier, kernel_size, sigma)
-    elif model_type == "BlurNet":
-        model = BlurNet(classifier, sigma)
-    else:
-        model = classifier
-
-    if weight_path:
-        checkpoint = torch.load(weight_path, map_location=torch.device('cpu'))
-        model.load_state_dict(checkpoint['state_dict'], strict=False)
-        print(f"Successfully loaded weights from {weight_path}")
-    return model
-
-
-activation = {}
-
-def hook_fn(name):
-    def hook(module, input, output):
-        activation[name] = output.detach()
-    return hook
-
-def register_hooks(model, target_layers=None):
-    for name, module in model.named_modules():
-        if (name in target_layers):
-            module.register_forward_hook(hook_fn(name))
-
-def get_transform():
-    return transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
-
-def load_image(image_path, transform):
-    image = Image.open(image_path).convert("RGB")
-    input_tensor = transform(image).unsqueeze(0)
-    return input_tensor
-
-def plot_freq_amplitude(im):
-    h, w = im.shape
-    y, x = np.indices((h, w))
-    center = (h//2, w//2)
-
-    radius = np.sqrt((x - center[1])**2 + (y - center[0])**2).astype(int)
-    radial_mean = np.bincount(radius.ravel(), weights=im.ravel()) / np.bincount(radius.ravel())
-    radial_mean = radial_mean[:min(im.shape) // 2]
-    plt.plot(radial_mean)
-    plt.xlabel('Spatial Frequency')
-    plt.ylabel('Amplitude')
-    plt.title("Radial Frequency Amplitude Distribution")
 
 
 def analyze_spectrum_with_radial_mean(magnitude_spectrum):
