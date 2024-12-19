@@ -184,9 +184,6 @@ def plot_freq_amplitude(im):
     return radial_mean
 
 
-# ================================
-# 5. Analyze Frequency Spectrum
-# ================================
 def analyze_spectrum_with_radial_mean(magnitude_spectrum):
     high_thres = int(80*len(magnitude_spectrum)/224)
     low_thres = int(16*len(magnitude_spectrum)/224)
